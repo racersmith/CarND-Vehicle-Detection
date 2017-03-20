@@ -28,8 +28,9 @@ The goals / steps of this project are the following:
 [image11]: ./output_images/combine_heatmap.png
 [video1]: ./output_videos/processed_project_video.mp4
 
-## [Rubric](https://review.udacity.com/#!/rubrics/513/view) Points
-###Here I will consider the rubric points individually and describe how I addressed each point in my implementation.  
+### Rubric Points
+
+Here I will consider the [rubric points](https://review.udacity.com/#!/rubrics/513/view) individually and describe how I addressed each point in my implementation.  
 
 ---
 ### Writeup / README
