@@ -52,7 +52,7 @@ To explore the HOG features, I took a random car image and extracted a HOG visua
 
 ![HOG Parameter Visualization][image2]
 
-To explore the impact of the color space on the extracted HOG feature I flattened the HOG map using `ravel()` and looked at the feature vector in a plot for car and non-car images.  I looked for colorspaces whose plots showed large separation between the car and non-car HOG features.  YCrCb and LAB both show good separation and were further explored in the classifier accuracy on the test data.
+To explore the impact of the color space on the extracted HOG feature I flattened the extracted HOG map using `ravel()` and looked at the feature vector in a plot averaged over a set of car and non-car images.  I looked for colorspaces whose plots showed large separation between the car and non-car HOG features.  YCrCb and LAB both show good separation and were further explored in the classifier accuracy on the test data.
 
 ![HOG Colorspace][image3]
 
@@ -78,10 +78,24 @@ HOG was discussed in the previous section, so I'll skip to the color histogram. 
 
 The color histogram shows good distinction in the HLS colorspace while the spatial feature shows very good separation, surprisingly, in the RGB colorspace.  The spatial feature was minimized as much as possible while still achieving a remarkable feature.  An (8, 8) spatial size with all three channels was the final selection resulting in a feature size of 192.  The color histogram did not contribute as much to feature size but I did notice that as the color histogram count got large the more the classifier was unable to generalize.  32 bins with all three color channels for the color histogram size, this resulted in a feature size of 96.
 
+##### Training the Classifier
+
+Training  was done in the `train_classifier()` function.
+
+The classifier was trained on all of the available car and non-car images provided as well as a few "trouble area" images extracted from the video.  The linear SVM was trained on 8794 car images and 8987 non-car images which is a balanced distribution.  
+
+Image preprocessing was done in the `preprocess_image()` function.  This function converts the image to YUV and histogram equalized on the Y channel using the `cv2.equalizeHist()` function normalizing the brightness.  After equalization, the image was converted back to BGR colorspace and blurred using `cv2.GaussianBlur()` with a kernel size of (3,3) and sigma of 0.  After much experimentation this was a major improvement in the performance of the classifier in the test video, drastically reducing the number of false positives.  A sample of the process is shown below.
+
+![Training equalization and blur][image6]
+
+Each of the training images were preprocessed then the their feature vector was extracted.  The feature vectors for both car and non_car images were stacked together and a standard scalar was fit using `sklearn.preprocessing.StandardScaler` which normalizes the feature vectors.  The scalar was then applied to the feature vector to normalize and then split into training and test sets using the `split_data()` function.  Finally the linear SVM was trained on the training set then the trained classifier was evaluated on the test set for accuracy.  Training on the entire image set takes about 30 seconds and achieves an accuracy on the test set of 99.16%. The trained classifier is then stored in the class as well as saved to a pickle file for use later without the need to retrain.
+
 
 ###Sliding Window Search
 
 ####1. Describe how (and identify where in your code) you implemented a sliding window search.  How did you decide what scales to search and how much to overlap windows?
+
+The sliding window search was implemented in the `search_image()` function.
 
 A sliding window search was used over four different scales.  The scaled search windows were squares of size 128, 106, 85 and 64.  Each search window was given a unique search area of the main image.  Each window was best at detecting cars of different sizes which correspond to different locations in the image.  The search areas were adjusted for each window size to give good detection results while restricting the search area to only that windows effective area.
 
@@ -91,9 +105,7 @@ The HOG extraction is a major source of computation time.  To try and minimize t
 
 ####2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
 
-The classifier was trained on all of the available car and non-car images provided as well as a few "trouble area" images extracted from the video.  The linear SVM was trained on 8794 car images and 8987 non-car images which is a fairly balanced distribution.  The training images were all converted to YUV and histogram equalized on the Y channel using the `cv2.equalizeHist()` function normalizing the brightness.  After equalization, the image was converted back to BGR colorspace and blurred using `cv2.GaussianBlur()` with a kernel size of (3,3) and sigma of 0.  After much experimentation this was a major improvement in the performance of the classifier in the test video, drastically reducing the number of false positives.
 
-![Training equalization and blur][image6]
 
 After training the classifier was tested on random sets of car and non-car images.
 
@@ -101,7 +113,7 @@ After training the classifier was tested on random sets of car and non-car image
 
 The training pipeline was then evaluated on the test images similar to the video.  Here you can see the sliding windows activated, the resulting heatmap and finally the cars identified and bounding boxes were drawn.
 
-### Full Image Pipeline Test
+##### Full Image Pipeline Test
 ![Pipeline test][image8]
 
 To optimize the performance of the classifier I tried to break down the classification features into the subparts and using simple graphical techniques I was able to quickly see what colorspaces and parameters to try training.  More on the parameter searching was discussed in the previous sections.  The trained classifier using the trial parameters was tested on the test images and test video to determine the performance.
@@ -133,9 +145,9 @@ The heatmaps above are added together, blurred and thresholded to generate the f
 
 ---
 
-###Discussion
+### Discussion
 
-####1. Briefly, discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
+#### 1. Briefly, discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
 Trying to eliminate false positives in the post processing proved to be challenging.  After several different methods to try and filter false positives from the heatmap, I moved my effort back to improving the classifier.  Using unique colorspaces that were better suited for each feature type proved to be a big improvement in accuracy.  The other large improvement was the addition of brightness equalization and slight blurring to the training set.  This was a reduction in classification accuracy on the test set, but it was a substantial improvement in the reduction of false positives in the video.  After the classifier was improved, the video processing was much easier.  I adopted the decaying heatmap technique that I started using while trying to eliminate false positives in my poor classifier.  This method has very nice stability and tracking while having a natural tendency to quickly reject false positives.  I think this same method could be applied without keeping some heatmaps in history and simply adding the new heatmap to a historic one that you decay each round.
 
