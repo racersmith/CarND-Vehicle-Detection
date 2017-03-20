@@ -32,21 +32,21 @@ The goals / steps of this project are the following:
 ###Here I will consider the rubric points individually and describe how I addressed each point in my implementation.  
 
 ---
-###Writeup / README
+### Writeup / README
 
-####1. Provide a Writeup / README that includes all the rubric points and how you addressed each one.  You can submit your writeup as markdown or pdf.  [Here](https://github.com/udacity/CarND-Vehicle-Detection/blob/master/writeup_template.md) is a template writeup for this project you can use as a guide and a starting point.  
+#### 1. Provide a Writeup / README that includes all the rubric points and how you addressed each one.  You can submit your writeup as markdown or pdf.  [Here](https://github.com/udacity/CarND-Vehicle-Detection/blob/master/writeup_template.md) is a template writeup for this project you can use as a guide and a starting point.  
 
 You're reading it!  There is also great information in the [Jupyter notebook!](./Vehicle_Tracking.ipynb)
 
-###Histogram of Oriented Gradients (HOG)
+### Histogram of Oriented Gradients (HOG)
 
-####1. Explain how (and identify where in your code) you extracted HOG features from the training images.
+#### 1. Explain how (and identify where in your code) you extracted HOG features from the training images.
 
 The `generate_hog()` function extracts the HOG features without flattening them into the feature vector.  This allows the same function for both the training as well as the sliding window search.
 
 ![HOG Comparison][image1]
 
-####2. Explain how you settled on your final choice of HOG parameters.
+#### 2. Explain how you settled on your final choice of HOG parameters.
 
 To explore the HOG features, I took a random car image and extracted a HOG visualization over a grid of orientations and cell sizes.  Visually it is becoming harder and harder to see the car image as the orientations decrease and the cell sizes increase.  There is a trade-off here as the parameter count increases rapidly with cell size reduction.  Orientations have a smaller impact on the total parameter count but increasing much above 5 it is difficult to see any improvement.  Training a classifier on a subset of the data to determine optimum parameters would be a good future exercise.  I settled on 9 orientations, 8 pixels per cell and a block size of 2.  This is an example of the HOG parameter grid for a car image:
 
@@ -68,7 +68,7 @@ Final HOG parameters:
 
 The HOG feature was extracted for all three color channels resulting in a feature size of 5292.
 
-####3. Describe how (and identify where in your code) you trained a classifier using your selected HOG features (and color features if you used them).
+#### 3. Describe how (and identify where in your code) you trained a classifier using your selected HOG features (and color features if you used them).
 
 Three training features were used in the linear SVM: HOG, color histogram, and spatial histogram.  Each feature was explored separately to determine good starting parameters.
 HOG was discussed in the previous section, so I'll skip to the color histogram.  The color histogram is simply a binning of color values for the image.  The spatial histogram is a downsampled and unraveled version of the image.  Each of these features utilized all their color channels.  To determine the best colorspace to use for the color and spatial histogram I examined the extracted features for a set of cars and non-cars in a plot.  To determine the best colorspace to use the plots were examined for separation between the car and non-car features.
@@ -91,9 +91,9 @@ Image preprocessing was done in the `preprocess_image()` function.  This functio
 Each of the training images were preprocessed then the their feature vector was extracted.  The feature vectors for both car and non_car images were stacked together and a standard scalar was fit using `sklearn.preprocessing.StandardScaler` which normalizes the feature vectors.  The scalar was then applied to the feature vector to normalize and then split into training and test sets using the `split_data()` function.  Finally the linear SVM was trained on the training set then the trained classifier was evaluated on the test set for accuracy.  Training on the entire image set takes about 30 seconds and achieves an accuracy on the test set of 99.16%. The trained classifier is then stored in the class as well as saved to a pickle file for use later without the need to retrain.
 
 
-###Sliding Window Search
+### Sliding Window Search
 
-####1. Describe how (and identify where in your code) you implemented a sliding window search.  How did you decide what scales to search and how much to overlap windows?
+#### 1. Describe how (and identify where in your code) you implemented a sliding window search.  How did you decide what scales to search and how much to overlap windows?
 
 The sliding window search was implemented in the `search_image()` function.
 
@@ -103,7 +103,7 @@ A sliding window search was used over four different scales.  The scaled search 
 
 The HOG extraction is a major source of computation time.  To try and minimize this as much as possible the image is restricted to just the search area for the given window size.  The HOG feature is extracted for this region of interest without flattening.  This HOG map is then subsampled for each sliding window then flattened to generate the feature vector.
 
-####2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
+#### 2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
 
 
 
@@ -124,11 +124,11 @@ Beyond the classifier, the sliding window search required a fair amount of optim
 
 ### Video Implementation
 
-####1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (somewhat wobbly or unstable bounding boxes are ok as long as you are identifying the vehicles most of the time with minimal false positives.)
+#### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (somewhat wobbly or unstable bounding boxes are ok as long as you are identifying the vehicles most of the time with minimal false positives.)
 Here's a [link to my video result](./output_videos/processed_project_video.mp4)
 
 
-####2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
+#### 2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
 
 To filter false positives, I used a history of the generated heatmaps that were then summed, blurred and thresholded to generate a composite heatmap.  The history of heatmaps were progressively blurred after each frame such that the oldest heatmaps were dispersed and the recent heatmaps were sharp.  This decaying effect reduced the effects of small hot spots as well as allowed for motion frame to frame with better tracking.  This method provided good rejection of single frame false positives as well as give persistence to detected cars that are dropped from a frame.  This composite heatmap was then passed to the `scipy.ndimage.measurements.label()` to extract each of the remaining blobs.  These labels were assumed to be cars.  Bounding boxes are created from each of the labeled blobs and drawn onto the image.
 
