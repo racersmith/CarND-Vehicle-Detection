@@ -25,7 +25,8 @@ The goals / steps of this project are the following:
 [image8]: ./output_images/window_heatmap_bbox.png
 [image9]: ./output_images/heatmap_decay.png
 [image10]: ./output_images/heatmap_history.png
-[image11]: ./output_images/combine_heatmap.png
+[image11]: ./output_images/combine_heatmap.png	"Combined Heatmap"
+[image13]: ./output_images/HOG_LAB.png	"HOG LAB Colorspace"
 [video1]: ./output_videos/processed_project_video.mp4
 
 ### Rubric Points
@@ -53,14 +54,16 @@ To explore the HOG features, I took a random car image and extracted a HOG visua
 
 ![HOG Parameter Visualization][image2]
 
-To explore the impact of the color space on the extracted HOG feature I flattened the extracted HOG map using `ravel()` and looked at the feature vector in a plot averaged over a set of car and non-car images.  I looked for colorspaces whose plots showed large separation between the car and non-car HOG features.  YCrCb and LAB both show good separation and were further explored in the classifier accuracy on the test data.
+To explore the impact of the color space on the extracted HOG feature I flattened the extracted HOG map using `ravel()` and looked at the feature vector in a plot averaged over a set of car and non-car images.  I looked for colorspaces whose plots showed large separation between the car and non-car HOG features.  YCrCb and LAB both show good separation and were further explored in the classifier accuracy on the test data. 
 
 ![HOG Colorspace][image3]
+
+![HOG Colorspace][image13]
 
 The HOG `transform_sqrt` parameter was tested on the test data accuracy and showed no improvement.
 
 Final HOG parameters:
-`color_space = YCrCb`
+`color_space = LAB`
 `orientations = 9`
 `pixels_per_cell = 8`
 `cells_per_block = (2, 2)`
@@ -106,7 +109,7 @@ The HOG extraction is a major source of computation time.  To try and minimize t
 
 #### 2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
 
-After training the classifier was tested on random sets of car and non-car images.
+After training the classifier was tested on random sets of car and non-car images.  Here you can see the general prediction from the classifier as well as the distance the sample is from the decision boundary.  This distance is later used as a way of quantifying the classifiers certainty in the prediction.
 
 ![Classifier testing][image7]
 
