@@ -106,8 +106,6 @@ The HOG extraction is a major source of computation time.  To try and minimize t
 
 #### 2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
 
-
-
 After training the classifier was tested on random sets of car and non-car images.
 
 ![Classifier testing][image7]
@@ -121,6 +119,8 @@ To optimize the performance of the classifier I tried to break down the classifi
 
 Beyond the classifier, the sliding window search required a fair amount of optimization.  This was a balance of good car identification and computation time.  Search areas were selected to give good overlap between different search sizes.
 
+
+
 ---
 
 ### Video Implementation
@@ -130,6 +130,8 @@ Here's a [link to my video result](./output_videos/processed_project_video.mp4)
 
 
 #### 2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
+
+The first method to eliminate false positives was to increase the confidence threshold that what the classifier was detecting was actually a car.  This was done with `sklearn.svm.decision_function()` which returns the distance a given sample is from the decision boundary hyperplane.  This was used to filter out car detections with low confidence.
 
 To filter false positives, I used a history of the generated heatmaps that were then summed, blurred and thresholded to generate a composite heatmap.  The history of heatmaps were progressively blurred after each frame such that the oldest heatmaps were dispersed and the recent heatmaps were sharp.  This decaying effect reduced the effects of small hot spots as well as allowed for motion frame to frame with better tracking.  This method provided good rejection of single frame false positives as well as give persistence to detected cars that are dropped from a frame.  This composite heatmap was then passed to the `scipy.ndimage.measurements.label()` to extract each of the remaining blobs.  These labels were assumed to be cars.  Bounding boxes are created from each of the labeled blobs and drawn onto the image.
 
